@@ -25,26 +25,29 @@ export default function SkillsAssessment() {
 
   // Format message content for better readability
   const formatMessageContent = (content) => {
+    // Strip markdown bold syntax
+    let cleanContent = content.replace(/\*\*([^*]+)\*\*/g, '$1');
+    
     // Split by double line breaks for paragraphs
-    const paragraphs = content.split(/\n\n+/);
+    const paragraphs = cleanContent.split(/\n\n+/);
     
     return paragraphs.map((paragraph, idx) => {
       // Check if it's a bullet list
-      if (paragraph.includes('\n- ') || paragraph.includes('\n• ')) {
+      if (paragraph.includes('\n•') || paragraph.match(/\n[-*]\s/)) {
         const lines = paragraph.split('\n').filter(line => line.trim());
-        const title = lines[0].match(/^[^-•]/) ? lines.shift() : null;
+        const title = lines[0] && !lines[0].match(/^[•\-*]\s/) ? lines.shift() : null;
         
         return (
           <div key={idx} className="mb-4">
             {title && <p className="font-semibold mb-2">{title}</p>}
             <ul className="space-y-2 ml-4">
               {lines.map((line, i) => {
-                const text = line.replace(/^[•\-\*]\s*/, '').trim();
+                const text = line.replace(/^[•\-*]\s*/, '').trim();
                 if (!text) return null;
                 return (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-1">•</span>
-                    <span>{text}</span>
+                    <span className="text-blue-600 mt-1 flex-shrink-0">•</span>
+                    <span className="flex-1">{text}</span>
                   </li>
                 );
               })}
@@ -56,25 +59,32 @@ export default function SkillsAssessment() {
       // Check if it's a numbered list
       if (paragraph.match(/^\d+\./m)) {
         const lines = paragraph.split('\n').filter(line => line.trim());
-        const title = !lines[0].match(/^\d+\./) ? lines.shift() : null;
+        const title = lines[0] && !lines[0].match(/^\d+\./) ? lines.shift() : null;
         
         return (
           <div key={idx} className="mb-4">
             {title && <p className="font-semibold mb-2">{title}</p>}
-            <ol className="space-y-2 ml-4 list-decimal list-inside">
+            <ol className="space-y-2 ml-6 list-decimal">
               {lines.map((line, i) => {
                 const text = line.replace(/^\d+\.\s*/, '').trim();
                 if (!text) return null;
-                return <li key={i}>{text}</li>;
+                return <li key={i} className="ml-2">{text}</li>;
               })}
             </ol>
           </div>
         );
       }
       
-      // Regular paragraph
+      // Regular paragraph - check if it should be bold (starts/ends with **)
       if (paragraph.trim()) {
-        return <p key={idx} className="mb-4 leading-relaxed">{paragraph.trim()}</p>;
+        const isBold = paragraph.match(/^\*\*.*\*\*$/);
+        const text = paragraph.replace(/^\*\*|\*\*$/g, '').trim();
+        
+        return (
+          <p key={idx} className={`mb-4 leading-relaxed ${isBold ? 'font-semibold' : ''}`}>
+            {text}
+          </p>
+        );
       }
       
       return null;
