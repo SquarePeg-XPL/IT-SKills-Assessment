@@ -253,6 +253,14 @@ Return ONLY valid JSON in this exact structure:
             currentPhase: 'complete',
             scores: assessmentResults
           }));
+          
+          // Don't add the JSON to messages - just show a completion message
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: "Thank you for completing the assessment! Your results are now ready above. You can review your scores, strengths, and personalized development recommendations."
+          }]);
+          
+          return; // Exit early, don't add JSON to messages
         } catch (parseError) {
           console.error("Error parsing final results:", parseError);
         }
