@@ -444,8 +444,92 @@ Return ONLY valid JSON in this exact structure:
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes shimmer {
+          0% { background-position: -1000px 0; }
+          100% { background-position: 1000px 0; }
+        }
+        
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .8; }
+        }
+        
         .animate-fadeIn {
           animation: fadeIn 0.5s ease-out;
+        }
+        
+        .animate-slideIn {
+          animation: slideIn 0.6s ease-out;
+        }
+        
+        .gradient-border {
+          position: relative;
+          background: linear-gradient(white, white) padding-box,
+                      linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899) border-box;
+          border: 2px solid transparent;
+        }
+        
+        .message-shadow {
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                      0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                      0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+        
+        .message-shadow:hover {
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+                      0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          transform: translateY(-1px);
+          transition: all 0.2s ease;
+        }
+        
+        .skill-bar {
+          background: linear-gradient(
+            90deg,
+            rgba(59, 130, 246, 0.1) 0%,
+            rgba(59, 130, 246, 0.05) 100%
+          );
+          animation: shimmer 3s infinite;
+          background-size: 1000px 100%;
+        }
+        
+        .input-focus:focus {
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          border-color: #3b82f6;
+        }
+        
+        .btn-hover:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.5);
+        }
+        
+        .card-hover:hover {
+          transform: translateY(-4px) scale(1.02);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+          border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, #2563eb, #7c3aed);
         }
       `}</style>
       
@@ -470,9 +554,9 @@ Return ONLY valid JSON in this exact structure:
                   This comprehensive assessment will evaluate your capabilities across multiple technical and soft skill areas to help identify your strengths and development opportunities.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-8 max-w-4xl mx-auto">
-                  <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-all">
+                  <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-all card-hover">
                     <h3 className="font-bold text-blue-900 mb-3 text-lg flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
                       Technical Skills
                     </h3>
                     <ul className="text-sm text-gray-700 space-y-2">
@@ -484,9 +568,9 @@ Return ONLY valid JSON in this exact structure:
                       ))}
                     </ul>
                   </div>
-                  <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-all">
+                  <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-all card-hover">
                     <h3 className="font-bold text-green-900 mb-3 text-lg flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                      <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
                       Soft Skills
                     </h3>
                     <ul className="text-sm text-gray-700 space-y-2">
@@ -509,7 +593,7 @@ Return ONLY valid JSON in this exact structure:
               </div>
               <button
                 onClick={startAssessment}
-                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl btn-hover"
               >
                 Begin Assessment
               </button>
@@ -518,19 +602,19 @@ Return ONLY valid JSON in this exact structure:
             <>
               {renderResults()}
               
-              <div className="h-[500px] overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white">
+              <div className="h-[500px] overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white custom-scrollbar">
                 {messages.map((message, index) => (
                   <div
                     key={index}
-                    className={`mb-4 animate-fadeIn ${
+                    className={`mb-4 animate-slideIn ${
                       message.role === 'user' ? 'text-right' : 'text-left'
                     }`}
                   >
                     <div
-                      className={`inline-block max-w-3xl p-5 rounded-2xl ${
+                      className={`inline-block max-w-3xl p-5 rounded-2xl message-shadow ${
                         message.role === 'user'
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                          : 'bg-white text-gray-800 shadow-lg border border-gray-100'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'
+                          : 'bg-white text-gray-800 border border-gray-100'
                       }`}
                     >
                       <div className={message.role === 'assistant' ? 'prose prose-sm max-w-none' : ''}>
@@ -565,13 +649,13 @@ Return ONLY valid JSON in this exact structure:
                       onChange={(e) => setInput(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Type your response..."
-                      className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none input-focus transition-all"
                       disabled={isLoading}
                     />
                     <button
                       onClick={sendMessage}
                       disabled={isLoading || !input.trim()}
-                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md btn-hover flex items-center gap-2"
                     >
                       <Send size={20} />
                       Send
