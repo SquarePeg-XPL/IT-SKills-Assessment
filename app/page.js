@@ -23,6 +23,64 @@ export default function SkillsAssessment() {
     scrollToBottom();
   }, [messages]);
 
+  // Format message content for better readability
+  const formatMessageContent = (content) => {
+    // Split by double line breaks for paragraphs
+    const paragraphs = content.split(/\n\n+/);
+    
+    return paragraphs.map((paragraph, idx) => {
+      // Check if it's a bullet list
+      if (paragraph.includes('\n- ') || paragraph.includes('\n• ')) {
+        const lines = paragraph.split('\n').filter(line => line.trim());
+        const title = lines[0].match(/^[^-•]/) ? lines.shift() : null;
+        
+        return (
+          <div key={idx} className="mb-4">
+            {title && <p className="font-semibold mb-2">{title}</p>}
+            <ul className="space-y-2 ml-4">
+              {lines.map((line, i) => {
+                const text = line.replace(/^[•\-\*]\s*/, '').trim();
+                if (!text) return null;
+                return (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-1">•</span>
+                    <span>{text}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      }
+      
+      // Check if it's a numbered list
+      if (paragraph.match(/^\d+\./m)) {
+        const lines = paragraph.split('\n').filter(line => line.trim());
+        const title = !lines[0].match(/^\d+\./) ? lines.shift() : null;
+        
+        return (
+          <div key={idx} className="mb-4">
+            {title && <p className="font-semibold mb-2">{title}</p>}
+            <ol className="space-y-2 ml-4 list-decimal list-inside">
+              {lines.map((line, i) => {
+                const text = line.replace(/^\d+\.\s*/, '').trim();
+                if (!text) return null;
+                return <li key={i}>{text}</li>;
+              })}
+            </ol>
+          </div>
+        );
+      }
+      
+      // Regular paragraph
+      if (paragraph.trim()) {
+        return <p key={idx} className="mb-4 leading-relaxed">{paragraph.trim()}</p>;
+      }
+      
+      return null;
+    }).filter(Boolean);
+  };
+
   const skillsMatrix = {
     technical: [
       'Infrastructure & Systems',
@@ -465,7 +523,9 @@ Return ONLY valid JSON in this exact structure:
                           : 'bg-white text-gray-800 shadow-lg border border-gray-100'
                       }`}
                     >
-                      <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                      <div className={message.role === 'assistant' ? 'prose prose-sm max-w-none' : ''}>
+                        {formatMessageContent(message.content)}
+                      </div>
                     </div>
                   </div>
                 ))}
