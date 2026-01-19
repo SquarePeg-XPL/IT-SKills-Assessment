@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Download, RotateCcw, CheckCircle, MessageSquare, Award } from 'lucide-react';
+import { Send, Download, RotateCcw, CheckCircle2, TrendingUp, Award, Sparkles } from 'lucide-react';
 
 export default function SkillsAssessment() {
   const [messages, setMessages] = useState([]);
@@ -27,30 +27,28 @@ export default function SkillsAssessment() {
   const formatMessageContent = (content) => {
     // Strip markdown syntax
     let cleanContent = content
-      .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold **text**
-      .replace(/^#{1,6}\s+/gm, '')        // Remove headers ##
-      .replace(/\*([^*]+)\*/g, '$1');     // Remove italic *text*
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/\*([^*]+)\*/g, '$1');
     
-    // Split by double line breaks for paragraphs
     const paragraphs = cleanContent.split(/\n\n+/);
     
     return paragraphs.map((paragraph, idx) => {
-      // Check if it's a bullet list
       if (paragraph.includes('\n•') || paragraph.match(/\n[-*]\s/)) {
         const lines = paragraph.split('\n').filter(line => line.trim());
         const title = lines[0] && !lines[0].match(/^[•\-*]\s/) ? lines.shift() : null;
         
         return (
-          <div key={idx} className="mb-4">
-            {title && <p className="font-semibold mb-2">{title}</p>}
-            <ul className="space-y-2">
+          <div key={idx} className="mb-3">
+            {title && <p className="font-medium mb-2 text-gray-900">{title}</p>}
+            <ul className="space-y-1.5">
               {lines.map((line, i) => {
                 const text = line.replace(/^[•\-*]\s*/, '').trim();
                 if (!text) return null;
                 return (
-                  <li key={i} className="flex items-start gap-2 text-gray-700">
-                    <span className="text-blue-600 mt-1 flex-shrink-0">•</span>
-                    <span className="flex-1">{text}</span>
+                  <li key={i} className="flex items-start gap-2 text-gray-600 text-sm">
+                    <span className="text-indigo-400 mt-0.5">•</span>
+                    <span>{text}</span>
                   </li>
                 );
               })}
@@ -59,33 +57,28 @@ export default function SkillsAssessment() {
         );
       }
       
-      // Check if it's a numbered list
       if (paragraph.match(/^\d+\./m)) {
         const lines = paragraph.split('\n').filter(line => line.trim());
         const title = lines[0] && !lines[0].match(/^\d+\./) ? lines.shift() : null;
         
         return (
-          <div key={idx} className="mb-4">
-            {title && <p className="font-semibold mb-2">{title}</p>}
-            <ol className="space-y-2 list-decimal pl-6">
+          <div key={idx} className="mb-3">
+            {title && <p className="font-medium mb-2 text-gray-900">{title}</p>}
+            <ol className="space-y-1.5 list-decimal pl-5">
               {lines.map((line, i) => {
                 const text = line.replace(/^\d+\.\s*/, '').trim();
                 if (!text) return null;
-                return <li key={i} className="text-gray-700">{text}</li>;
+                return <li key={i} className="text-gray-600 text-sm">{text}</li>;
               })}
             </ol>
           </div>
         );
       }
       
-      // Regular paragraph - check if it should be bold
       if (paragraph.trim()) {
-        const isBold = paragraph.match(/^\*\*.*\*\*$/);
-        const text = paragraph.replace(/^\*\*|\*\*$/g, '').trim();
-        
         return (
-          <p key={idx} className={`mb-4 leading-relaxed ${isBold ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
-            {text}
+          <p key={idx} className="mb-3 text-gray-600 text-sm leading-relaxed">
+            {paragraph.trim()}
           </p>
         );
       }
@@ -187,20 +180,17 @@ Return ONLY valid JSON in this exact structure:
 
       const data = await response.json();
       const claudeResponse = data.content[0].text;
-      
+
       setMessages([{
         role: 'assistant',
         content: claudeResponse
       }]);
+
     } catch (error) {
       console.error("Error starting assessment:", error);
-      setMessages([{
-        role: 'assistant',
-        content: "I apologize, but I'm having trouble starting the assessment. Please try again."
-      }]);
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const sendMessage = async () => {
@@ -208,8 +198,12 @@ Return ONLY valid JSON in this exact structure:
 
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setIsLoading(true);
+
+    setMessages(prev => [...prev, {
+      role: 'user',
+      content: userMessage
+    }]);
 
     try {
       const conversationHistory = messages.map(msg => ({
@@ -241,16 +235,13 @@ Return ONLY valid JSON in this exact structure:
       const data = await response.json();
       let claudeResponse = data.content[0].text;
 
-      // Check if this is the final assessment JSON - look for the JSON structure
+      // Check if this is the final assessment JSON
       if (claudeResponse.includes('"assessmentComplete": true') || claudeResponse.includes('assessmentComplete')) {
         try {
-          // Extract JSON from response (may be wrapped in markdown or have preamble text)
           let jsonText = claudeResponse;
           
-          // Remove markdown code blocks if present
           jsonText = jsonText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
           
-          // Try to extract just the JSON object if there's other text
           const jsonMatch = jsonText.match(/\{[\s\S]*"assessmentComplete"[\s\S]*\}/);
           if (jsonMatch) {
             jsonText = jsonMatch[0];
@@ -258,7 +249,6 @@ Return ONLY valid JSON in this exact structure:
           
           const assessmentResults = JSON.parse(jsonText);
           
-          // Only proceed if we successfully parsed and it has the complete flag
           if (assessmentResults.assessmentComplete) {
             setAssessmentState(prev => ({
               ...prev,
@@ -266,17 +256,15 @@ Return ONLY valid JSON in this exact structure:
               scores: assessmentResults
             }));
             
-            // Don't add the JSON to messages - just show a completion message
             setMessages(prev => [...prev, {
               role: 'assistant',
               content: "✓ Assessment complete! Here are your detailed results:"
             }]);
             
-            return; // Exit early, don't add JSON to messages
+            return;
           }
         } catch (parseError) {
           console.error("Error parsing final results:", parseError);
-          // Fall through to add the message normally if parsing fails
         }
       }
 
@@ -291,9 +279,9 @@ Return ONLY valid JSON in this exact structure:
         role: 'assistant',
         content: "I apologize, but I encountered an error. Please try sending your response again."
       }]);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const handleKeyPress = (e) => {
@@ -334,128 +322,186 @@ Return ONLY valid JSON in this exact structure:
     }
 
     const results = assessmentState.scores;
+    
+    const getScoreColor = (score) => {
+      if (score >= 4) return 'emerald';
+      if (score >= 3) return 'blue';
+      if (score >= 2) return 'amber';
+      return 'slate';
+    };
 
     return (
-      <div className="p-6 bg-white rounded-3xl shadow-lg border border-gray-100 animate-fadeIn">
-        <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-md">
-              <Award className="text-white" size={28} />
-            </div>
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">Assessment Complete!</h2>
-              <p className="text-gray-500 mt-1">Your comprehensive skills evaluation</p>
-            </div>
-          </div>
-          <button
-            onClick={exportResults}
-            className="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all shadow-sm hover:shadow-md border border-gray-200"
-          >
-            <Download size={18} />
-            <span className="font-medium">Export Results</span>
-          </button>
-        </div>
-
-        <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
-          <p className="text-gray-700 leading-relaxed text-lg">{results.overallSummary}</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-1.5 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
-              <h3 className="text-2xl font-bold text-gray-900">Technical Skills</h3>
-            </div>
-            <div className="space-y-5">
-              {Object.entries(results.scores)
-                .filter(([key]) => skillsMatrix.technical.includes(key))
-                .map(([skill, score]) => (
-                  <div key={skill} className="group">
-                    <div className="flex justify-between items-center mb-2.5">
-                      <span className="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">{skill}</span>
-                      <span className="text-sm font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg">{score}/5</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full transition-all duration-1000 ease-out"
-                        style={{ width: `${(score / 5) * 100}%` }}
-                      />
-                    </div>
+      <div className="mb-6 animate-fadeIn">
+        <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
+          {/* Header */}
+          <div className="p-8 border-b border-gray-100 bg-gradient-to-br from-gray-50 to-white">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-4">
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <Sparkles className="text-white" size={28} strokeWidth={2} />
                   </div>
-                ))}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-1.5 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full"></div>
-              <h3 className="text-2xl font-bold text-gray-900">Soft Skills</h3>
-            </div>
-            <div className="space-y-5">
-              {Object.entries(results.scores)
-                .filter(([key]) => skillsMatrix.soft.includes(key))
-                .map(([skill, score]) => (
-                  <div key={skill} className="group">
-                    <div className="flex justify-between items-center mb-2.5">
-                      <span className="text-sm font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors">{skill}</span>
-                      <span className="text-sm font-bold bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg">{score}/5</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2.5 rounded-full transition-all duration-1000 ease-out"
-                        style={{ width: `${(score / 5) * 100}%` }}
-                      />
-                    </div>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <CheckCircle2 size={12} className="text-white" strokeWidth={3} />
                   </div>
-                ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="p-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl shadow-sm border border-emerald-100">
-            <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
-              <CheckCircle size={24} className="text-emerald-600" />
-              Key Strengths
-            </h3>
-            <ul className="space-y-3">
-              {results.strengths?.map((strength, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-gray-700">
-                  <span className="text-emerald-500 mt-1 text-lg">●</span>
-                  <span className="leading-relaxed">{strength}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="p-8 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-sm border border-amber-100">
-            <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
-              <MessageSquare size={24} className="text-amber-600" />
-              Development Areas
-            </h3>
-            <ul className="space-y-3">
-              {results.developmentAreas?.map((area, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-gray-700">
-                  <span className="text-amber-500 mt-1 text-lg">●</span>
-                  <span className="leading-relaxed">{area}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">Development Recommendations</h3>
-          <div className="grid grid-cols-1 gap-4">
-            {Object.entries(results.recommendations || {}).map(([skill, recommendation]) => (
-              <div key={skill} className="p-5 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
-                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  {skill}
-                </h4>
-                <p className="text-sm text-gray-700 leading-relaxed pl-4">{recommendation}</p>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-1">Assessment Complete</h2>
+                  <p className="text-gray-500 text-sm">Your comprehensive skills evaluation</p>
+                </div>
               </div>
-            ))}
+              <button
+                onClick={exportResults}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+              >
+                <Download size={16} strokeWidth={2} />
+                Export
+              </button>
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div className="p-8 border-b border-gray-100">
+            <div className="flex items-start gap-3">
+              <div className="w-1 h-20 bg-gradient-to-b from-indigo-500 to-indigo-600 rounded-full mt-1"></div>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">Executive Summary</h3>
+                <p className="text-gray-600 leading-relaxed">{results.overallSummary}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Scores Grid */}
+          <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Technical Skills */}
+            <div>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-1.5 h-6 bg-indigo-500 rounded-full"></div>
+                <h3 className="text-lg font-semibold text-gray-900">Technical Skills</h3>
+              </div>
+              <div className="space-y-4">
+                {Object.entries(results.scores)
+                  .filter(([key]) => skillsMatrix.technical.includes(key))
+                  .map(([skill, score]) => {
+                    const color = getScoreColor(score);
+                    return (
+                      <div key={skill} className="group">
+                        <div className="flex justify-between items-baseline mb-2">
+                          <span className="text-sm font-medium text-gray-700">{skill}</span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-semibold text-gray-900">{score}</span>
+                            <span className="text-xs text-gray-400">/5</span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                              color === 'emerald' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' :
+                              color === 'blue' ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
+                              color === 'amber' ? 'bg-gradient-to-r from-amber-500 to-amber-600' :
+                              'bg-gradient-to-r from-slate-400 to-slate-500'
+                            }`}
+                            style={{ width: `${(score / 5) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Soft Skills */}
+            <div>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-1.5 h-6 bg-violet-500 rounded-full"></div>
+                <h3 className="text-lg font-semibold text-gray-900">Soft Skills</h3>
+              </div>
+              <div className="space-y-4">
+                {Object.entries(results.scores)
+                  .filter(([key]) => skillsMatrix.soft.includes(key))
+                  .map(([skill, score]) => {
+                    const color = getScoreColor(score);
+                    return (
+                      <div key={skill} className="group">
+                        <div className="flex justify-between items-baseline mb-2">
+                          <span className="text-sm font-medium text-gray-700">{skill}</span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-semibold text-gray-900">{score}</span>
+                            <span className="text-xs text-gray-400">/5</span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                              color === 'emerald' ? 'bg-gradient-to-r from-emerald-500 to-emerald-600' :
+                              color === 'blue' ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
+                              color === 'amber' ? 'bg-gradient-to-r from-amber-500 to-amber-600' :
+                              'bg-gradient-to-r from-slate-400 to-slate-500'
+                            }`}
+                            style={{ width: `${(score / 5) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          </div>
+
+          {/* Insights Grid */}
+          <div className="p-8 pt-0 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Strengths */}
+            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50/50 rounded-2xl border border-emerald-100">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp size={20} className="text-emerald-600" strokeWidth={2} />
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Key Strengths</h3>
+              </div>
+              <ul className="space-y-2.5">
+                {results.strengths?.map((strength, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-sm text-gray-700">
+                    <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 flex-shrink-0" strokeWidth={2} />
+                    <span className="leading-relaxed">{strength}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Development Areas */}
+            <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-2xl border border-blue-100">
+              <div className="flex items-center gap-2 mb-4">
+                <Award size={20} className="text-blue-600" strokeWidth={2} />
+                <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Growth Opportunities</h3>
+              </div>
+              <ul className="space-y-2.5">
+                {results.developmentAreas?.map((area, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 text-sm text-gray-700">
+                    <div className="w-4 h-4 rounded-full border-2 border-blue-400 flex-shrink-0 mt-0.5"></div>
+                    <span className="leading-relaxed">{area}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <div className="p-8 pt-0">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-1.5 h-6 bg-gradient-to-b from-indigo-500 to-violet-500 rounded-full"></div>
+              <h3 className="text-lg font-semibold text-gray-900">Personalized Recommendations</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {Object.entries(results.recommendations || {}).map(([skill, recommendation]) => (
+                <div key={skill} className="group p-4 bg-gray-50/50 hover:bg-gray-50 border border-gray-200/50 hover:border-gray-300/50 rounded-xl transition-all">
+                  <div className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-1">{skill}</h4>
+                      <p className="text-sm text-gray-600 leading-relaxed">{recommendation}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -463,150 +509,176 @@ Return ONLY valid JSON in this exact structure:
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gray-50">
       <style jsx global>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
+          from { opacity: 0; transform: translateY(8px); }
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out;
+          animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes pulse-subtle {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        .animate-pulse-subtle {
+          animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
       `}</style>
       
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/10 to-indigo-500/20"></div>
-            <div className="relative z-10">
-              <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                <Award size={36} />
-                IT Skills Assessment
-              </h1>
-              <p className="text-blue-100 text-lg">Comprehensive evaluation of technical and soft skills</p>
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
+          {/* Header */}
+          <div className="relative px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-white via-gray-50/50 to-white">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <Award size={20} className="text-white" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">Skills Assessment</h1>
+                <p className="text-sm text-gray-500">Comprehensive technical and soft skills evaluation</p>
+              </div>
             </div>
           </div>
 
           {!assessmentState.started ? (
-            <div className="p-12 text-center">
-              <div className="mb-10 animate-fadeIn">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-6 shadow-lg">
-                  <Award className="text-white" size={40} />
+            <div className="p-12">
+              <div className="max-w-4xl mx-auto text-center">
+                {/* Welcome Content */}
+                <div className="mb-12">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mb-6 shadow-xl shadow-indigo-500/20">
+                    <Sparkles className="text-white" size={32} strokeWidth={2} />
+                  </div>
+                  <h2 className="text-3xl font-semibold text-gray-900 mb-3">Welcome</h2>
+                  <p className="text-lg text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                    A comprehensive evaluation to identify your strengths and unlock growth opportunities
+                  </p>
                 </div>
-                <h2 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Your Skills Assessment</h2>
-                <p className="text-gray-600 text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
-                  A comprehensive evaluation of your technical and soft skills to identify strengths and growth opportunities.
-                </p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-10 max-w-5xl mx-auto">
-                  <div className="group p-8 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-blue-200 hover:shadow-xl transition-all duration-300">
+
+                {/* Skills Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                  <div className="group p-6 bg-white border border-gray-200/80 rounded-2xl hover:border-gray-300 hover:shadow-sm transition-all">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                        <div className="w-3 h-3 bg-blue-600 rounded-full group-hover:bg-white"></div>
+                      <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
+                        <div className="w-2 h-2 bg-indigo-600 rounded-full group-hover:bg-white transition-colors"></div>
                       </div>
-                      <h3 className="font-bold text-gray-900 text-xl">Technical Skills</h3>
+                      <h3 className="font-semibold text-gray-900">Technical Skills</h3>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 text-sm text-gray-600">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-left text-sm text-gray-600">
                       {skillsMatrix.technical.map((skill, idx) => (
                         <div key={idx} className="flex items-center gap-2">
-                          <CheckCircle size={14} className="text-blue-500 flex-shrink-0" />
+                          <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                           <span>{skill}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-                  
-                  <div className="group p-8 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-emerald-200 hover:shadow-xl transition-all duration-300">
+
+                  <div className="group p-6 bg-white border border-gray-200/80 rounded-2xl hover:border-gray-300 hover:shadow-sm transition-all">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
-                        <div className="w-3 h-3 bg-emerald-600 rounded-full group-hover:bg-white"></div>
+                      <div className="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center group-hover:bg-violet-500 transition-colors">
+                        <div className="w-2 h-2 bg-violet-600 rounded-full group-hover:bg-white transition-colors"></div>
                       </div>
-                      <h3 className="font-bold text-gray-900 text-xl">Soft Skills</h3>
+                      <h3 className="font-semibold text-gray-900">Soft Skills</h3>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 text-sm text-gray-600">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-left text-sm text-gray-600">
                       {skillsMatrix.soft.map((skill, idx) => (
                         <div key={idx} className="flex items-center gap-2">
-                          <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
+                          <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
                           <span>{skill}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
-                
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-6 rounded-2xl mb-10 max-w-2xl mx-auto">
-                  <div className="space-y-2 text-gray-700">
-                    <p><span className="font-semibold text-gray-900">Duration:</span> 15-20 minutes</p>
-                    <p><span className="font-semibold text-gray-900">Format:</span> Conversational assessment</p>
-                    <p><span className="font-semibold text-gray-900">Result:</span> Detailed skills report</p>
+
+                {/* Info Bar */}
+                <div className="inline-flex items-center gap-6 p-4 bg-gray-50 border border-gray-200/50 rounded-xl mb-10 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                    <span><span className="font-medium text-gray-900">15-20 min</span> duration</span>
+                  </div>
+                  <div className="w-px h-4 bg-gray-300"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                    <span><span className="font-medium text-gray-900">Conversational</span> format</span>
+                  </div>
+                  <div className="w-px h-4 bg-gray-300"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                    <span><span className="font-medium text-gray-900">Detailed</span> report</span>
                   </div>
                 </div>
+
+                {/* CTA */}
+                <button
+                  onClick={startAssessment}
+                  className="group relative inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-95"
+                >
+                  <span>Begin Assessment</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
-              <button
-                onClick={startAssessment}
-                className="group relative px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <span className="relative z-10">Begin Assessment</span>
-                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity"></div>
-              </button>
             </div>
           ) : (
             <>
-              <div className="h-[600px] overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white">
+              {/* Chat Area */}
+              <div className="h-[600px] overflow-y-auto px-8 py-6 bg-gradient-to-b from-white to-gray-50/30">
                 {messages.map((message, index) => (
                   <div
                     key={index}
                     className={`mb-6 animate-fadeIn ${
-                      message.role === 'user' ? 'text-right' : 'text-left'
+                      message.role === 'user' ? 'flex justify-end' : 'flex justify-start'
                     }`}
                   >
                     <div
-                      className={`inline-block max-w-3xl p-6 rounded-2xl ${
+                      className={`max-w-3xl ${
                         message.role === 'user'
-                          ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-md'
-                          : 'bg-white text-gray-800 shadow-sm border border-gray-100'
+                          ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white px-5 py-4 rounded-2xl rounded-tr-md shadow-md shadow-indigo-500/10'
+                          : 'bg-white border border-gray-200/80 text-gray-700 px-5 py-4 rounded-2xl rounded-tl-md shadow-sm'
                       }`}
                     >
-                      <div className={message.role === 'assistant' ? 'prose prose-sm max-w-none text-gray-700 leading-relaxed' : 'text-white leading-relaxed'}>
+                      <div className={message.role === 'assistant' ? 'text-sm' : 'text-sm'}>
                         {formatMessageContent(message.content)}
                       </div>
                     </div>
                   </div>
                 ))}
+                
                 {isLoading && (
-                  <div className="text-left mb-6 animate-fadeIn">
-                    <div className="inline-block bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                  <div className="flex justify-start mb-6 animate-fadeIn">
+                    <div className="bg-white border border-gray-200/80 px-5 py-4 rounded-2xl rounded-tl-md shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className="flex gap-1.5">
-                          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
                         </div>
-                        <span className="text-gray-500 text-sm">Analyzing your response...</span>
+                        <span className="text-sm text-gray-400">Analyzing...</span>
                       </div>
                     </div>
                   </div>
                 )}
                 
-                {/* Show results inline at bottom of conversation */}
-                {assessmentState.currentPhase === 'complete' && assessmentState.scores.assessmentComplete && (
-                  <div className="mb-4 animate-fadeIn">
-                    {renderResults()}
-                  </div>
-                )}
+                {/* Show results inline */}
+                {assessmentState.currentPhase === 'complete' && assessmentState.scores.assessmentComplete && renderResults()}
                 
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* Input Area */}
               {assessmentState.currentPhase !== 'complete' && (
-                <div className="p-6 bg-white border-t border-gray-100">
-                  <div className="flex gap-4 items-end">
+                <div className="px-8 py-6 border-t border-gray-100 bg-white">
+                  <div className="flex gap-3 items-end">
                     <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder="Type your response... (Shift+Enter for new line, Enter to send)"
-                      className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none overflow-auto text-gray-900 placeholder-gray-400"
+                      placeholder="Type your response... (Shift+Enter for new line)"
+                      className="flex-1 px-4 py-3.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none bg-white placeholder-gray-400"
                       style={{
                         minHeight: '120px',
                         maxHeight: '300px',
@@ -618,27 +690,28 @@ Return ONLY valid JSON in this exact structure:
                     <button
                       onClick={sendMessage}
                       disabled={isLoading || !input.trim()}
-                      className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-semibold hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2 h-[60px]"
+                      className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-medium rounded-xl hover:from-indigo-700 hover:to-indigo-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg disabled:shadow-none flex items-center gap-2 h-[56px]"
                     >
-                      <Send size={20} />
-                      Send
+                      <Send size={18} strokeWidth={2} />
+                      <span className="text-sm">Send</span>
                     </button>
                   </div>
                 </div>
               )}
 
-              <div className="p-5 bg-gradient-to-r from-gray-50 to-slate-50 border-t border-gray-100 flex justify-between items-center">
+              {/* Footer */}
+              <div className="px-8 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-between items-center">
                 <button
                   onClick={resetAssessment}
-                  className="flex items-center gap-2 px-5 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-all border border-transparent hover:border-gray-200"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-all border border-transparent hover:border-gray-200"
                 >
-                  <RotateCcw size={18} />
-                  <span className="font-medium">Start New Assessment</span>
+                  <RotateCcw size={16} strokeWidth={2} />
+                  New Assessment
                 </button>
                 {assessmentState.currentPhase === 'complete' && (
-                  <div className="flex items-center gap-2 text-emerald-600 font-semibold bg-emerald-50 px-4 py-2.5 rounded-xl border border-emerald-200">
-                    <CheckCircle size={20} />
-                    Assessment Complete
+                  <div className="flex items-center gap-2 text-sm font-medium text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg border border-emerald-200/50">
+                    <CheckCircle2 size={16} strokeWidth={2.5} />
+                    Complete
                   </div>
                 )}
               </div>
