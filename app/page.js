@@ -529,7 +529,7 @@ Return ONLY valid JSON in this exact structure:
             <>
               {renderResults()}
               
-              <div className="h-[500px] overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white">
+              <div className="h-[600px] overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white">
                 {messages.map((message, index) => (
                   <div
                     key={index}
@@ -569,20 +569,25 @@ Return ONLY valid JSON in this exact structure:
 
               {assessmentState.currentPhase !== 'complete' && (
                 <div className="p-6 bg-white border-t border-gray-200">
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
+                  <div className="flex gap-3 items-end">
+                    <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder="Type your response..."
-                      className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      placeholder="Type your response... (Shift+Enter for new line, Enter to send)"
+                      className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none overflow-auto"
+                      style={{
+                        minHeight: '60px',
+                        maxHeight: '200px',
+                        height: input ? `${Math.min(200, Math.max(60, input.split('\n').length * 24 + 36))}px` : '60px'
+                      }}
+                      rows={1}
                       disabled={isLoading}
                     />
                     <button
                       onClick={sendMessage}
                       disabled={isLoading || !input.trim()}
-                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2 h-[60px]"
                     >
                       <Send size={20} />
                       Send
