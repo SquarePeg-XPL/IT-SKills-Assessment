@@ -269,7 +269,7 @@ Return ONLY valid JSON in this exact structure:
             // Don't add the JSON to messages - just show a completion message
             setMessages(prev => [...prev, {
               role: 'assistant',
-              content: "✓ Assessment complete! Your detailed results are displayed above with scores, strengths, and personalized development recommendations."
+              content: "✓ Assessment complete! Here are your detailed results:"
             }]);
             
             return; // Exit early, don't add JSON to messages
@@ -336,48 +336,48 @@ Return ONLY valid JSON in this exact structure:
     const results = assessmentState.scores;
 
     return (
-      <div className="p-6 bg-gradient-to-br from-green-50 to-blue-50 border-b border-green-200 animate-fadeIn">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-green-500 rounded-full">
-              <Award className="text-white" size={24} />
+      <div className="p-6 bg-white rounded-3xl shadow-lg border border-gray-100 animate-fadeIn">
+        <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl shadow-md">
+              <Award className="text-white" size={28} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">Assessment Complete!</h2>
-              <p className="text-gray-600">Your comprehensive skills evaluation is ready</p>
+              <h2 className="text-3xl font-bold text-gray-900">Assessment Complete!</h2>
+              <p className="text-gray-500 mt-1">Your comprehensive skills evaluation</p>
             </div>
           </div>
           <button
             onClick={exportResults}
-            className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-all shadow-md hover:shadow-lg"
+            className="flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all shadow-sm hover:shadow-md border border-gray-200"
           >
             <Download size={18} />
-            Export Results
+            <span className="font-medium">Export Results</span>
           </button>
         </div>
 
-        <div className="mb-6 p-6 bg-white rounded-xl shadow-md">
-          <p className="text-gray-700 leading-relaxed">{results.overallSummary}</p>
+        <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+          <p className="text-gray-700 leading-relaxed text-lg">{results.overallSummary}</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <div className="w-1 h-6 bg-blue-500 rounded"></div>
-              Technical Skills
-            </h3>
-            <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-1.5 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
+              <h3 className="text-2xl font-bold text-gray-900">Technical Skills</h3>
+            </div>
+            <div className="space-y-5">
               {Object.entries(results.scores)
                 .filter(([key]) => skillsMatrix.technical.includes(key))
                 .map(([skill, score]) => (
                   <div key={skill} className="group">
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex justify-between items-center mb-2.5">
                       <span className="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">{skill}</span>
-                      <span className="text-sm font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">{score}/5</span>
+                      <span className="text-sm font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg">{score}/5</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-1000 ease-out shadow-sm"
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full transition-all duration-1000 ease-out"
                         style={{ width: `${(score / 5) * 100}%` }}
                       />
                     </div>
@@ -386,23 +386,23 @@ Return ONLY valid JSON in this exact structure:
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <div className="w-1 h-6 bg-green-500 rounded"></div>
-              Soft Skills
-            </h3>
-            <div className="space-y-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-1.5 h-8 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full"></div>
+              <h3 className="text-2xl font-bold text-gray-900">Soft Skills</h3>
+            </div>
+            <div className="space-y-5">
               {Object.entries(results.scores)
                 .filter(([key]) => skillsMatrix.soft.includes(key))
                 .map(([skill, score]) => (
                   <div key={skill} className="group">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-semibold text-gray-700 group-hover:text-green-600 transition-colors">{skill}</span>
-                      <span className="text-sm font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full">{score}/5</span>
+                    <div className="flex justify-between items-center mb-2.5">
+                      <span className="text-sm font-semibold text-gray-700 group-hover:text-emerald-600 transition-colors">{skill}</span>
+                      <span className="text-sm font-bold bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg">{score}/5</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-1000 ease-out shadow-sm"
+                        className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2.5 rounded-full transition-all duration-1000 ease-out"
                         style={{ width: `${(score / 5) * 100}%` }}
                       />
                     </div>
@@ -412,48 +412,48 @@ Return ONLY valid JSON in this exact structure:
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md border border-green-200">
-            <h3 className="text-lg font-bold text-green-900 mb-3 flex items-center gap-2">
-              <CheckCircle size={20} className="text-green-600" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="p-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl shadow-sm border border-emerald-100">
+            <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
+              <CheckCircle size={24} className="text-emerald-600" />
               Key Strengths
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {results.strengths?.map((strength, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-gray-700">
-                  <span className="text-green-600 mt-1">●</span>
-                  <span>{strength}</span>
+                <li key={idx} className="flex items-start gap-3 text-gray-700">
+                  <span className="text-emerald-500 mt-1 text-lg">●</span>
+                  <span className="leading-relaxed">{strength}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-md border border-orange-200">
-            <h3 className="text-lg font-bold text-orange-900 mb-3 flex items-center gap-2">
-              <MessageSquare size={20} className="text-orange-600" />
+          <div className="p-8 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-sm border border-amber-100">
+            <h3 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
+              <MessageSquare size={24} className="text-amber-600" />
               Development Areas
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {results.developmentAreas?.map((area, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-gray-700">
-                  <span className="text-orange-600 mt-1">●</span>
-                  <span>{area}</span>
+                <li key={idx} className="flex items-start gap-3 text-gray-700">
+                  <span className="text-amber-500 mt-1 text-lg">●</span>
+                  <span className="leading-relaxed">{area}</span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Development Recommendations</h3>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">Development Recommendations</h3>
           <div className="grid grid-cols-1 gap-4">
             {Object.entries(results.recommendations || {}).map(([skill, recommendation]) => (
-              <div key={skill} className="p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-200 hover:shadow-md transition-all">
-                <h4 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+              <div key={skill} className="p-5 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+                <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                   <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                   {skill}
                 </h4>
-                <p className="text-sm text-gray-700 leading-relaxed">{recommendation}</p>
+                <p className="text-sm text-gray-700 leading-relaxed pl-4">{recommendation}</p>
               </div>
             ))}
           </div>
@@ -474,10 +474,10 @@ Return ONLY valid JSON in this exact structure:
         }
       `}</style>
       
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-8 text-white relative overflow-hidden">
-            <div className="absolute inset-0 bg-black opacity-10"></div>
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/10 to-indigo-500/20"></div>
             <div className="relative z-10">
               <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
                 <Award size={36} />
@@ -489,107 +489,124 @@ Return ONLY valid JSON in this exact structure:
 
           {!assessmentState.started ? (
             <div className="p-12 text-center">
-              <div className="mb-8 animate-fadeIn">
-                <h2 className="text-3xl font-bold text-gray-800 mb-4">Welcome to Your Skills Assessment</h2>
-                <p className="text-gray-600 text-lg mb-6 max-w-2xl mx-auto">
-                  This comprehensive assessment will evaluate your capabilities across multiple technical and soft skill areas to help identify your strengths and development opportunities.
+              <div className="mb-10 animate-fadeIn">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-6 shadow-lg">
+                  <Award className="text-white" size={40} />
+                </div>
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Your Skills Assessment</h2>
+                <p className="text-gray-600 text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
+                  A comprehensive evaluation of your technical and soft skills to identify strengths and growth opportunities.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-8 max-w-4xl mx-auto">
-                  <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md border border-blue-200 hover:shadow-lg transition-all">
-                    <h3 className="font-bold text-blue-900 mb-3 text-lg flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                      Technical Skills
-                    </h3>
-                    <ul className="text-sm text-gray-700 space-y-2">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mb-10 max-w-5xl mx-auto">
+                  <div className="group p-8 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-blue-200 hover:shadow-xl transition-all duration-300">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                        <div className="w-3 h-3 bg-blue-600 rounded-full group-hover:bg-white"></div>
+                      </div>
+                      <h3 className="font-bold text-gray-900 text-xl">Technical Skills</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm text-gray-600">
                       {skillsMatrix.technical.map((skill, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <CheckCircle size={16} className="text-blue-600 flex-shrink-0" />
-                          {skill}
-                        </li>
+                        <div key={idx} className="flex items-center gap-2">
+                          <CheckCircle size={14} className="text-blue-500 flex-shrink-0" />
+                          <span>{skill}</span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
-                  <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md border border-green-200 hover:shadow-lg transition-all">
-                    <h3 className="font-bold text-green-900 mb-3 text-lg flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                      Soft Skills
-                    </h3>
-                    <ul className="text-sm text-gray-700 space-y-2">
+                  
+                  <div className="group p-8 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-emerald-200 hover:shadow-xl transition-all duration-300">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+                        <div className="w-3 h-3 bg-emerald-600 rounded-full group-hover:bg-white"></div>
+                      </div>
+                      <h3 className="font-bold text-gray-900 text-xl">Soft Skills</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm text-gray-600">
                       {skillsMatrix.soft.map((skill, idx) => (
-                        <li key={idx} className="flex items-center gap-2">
-                          <CheckCircle size={16} className="text-green-600 flex-shrink-0" />
-                          {skill}
-                        </li>
+                        <div key={idx} className="flex items-center gap-2">
+                          <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
+                          <span>{skill}</span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 </div>
-                <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-lg mb-8 max-w-2xl mx-auto">
-                  <div className="text-gray-700 space-y-1">
-                    <p><span className="font-semibold">Duration:</span> 15-20 minutes</p>
-                    <p><span className="font-semibold">Format:</span> Conversational assessment</p>
-                    <p><span className="font-semibold">Result:</span> Detailed skills report</p>
+                
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-6 rounded-2xl mb-10 max-w-2xl mx-auto">
+                  <div className="space-y-2 text-gray-700">
+                    <p><span className="font-semibold text-gray-900">Duration:</span> 15-20 minutes</p>
+                    <p><span className="font-semibold text-gray-900">Format:</span> Conversational assessment</p>
+                    <p><span className="font-semibold text-gray-900">Result:</span> Detailed skills report</p>
                   </div>
                 </div>
               </div>
               <button
                 onClick={startAssessment}
-                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="group relative px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-2xl transform hover:-translate-y-0.5 active:translate-y-0"
               >
-                Begin Assessment
+                <span className="relative z-10">Begin Assessment</span>
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-xl transition-opacity"></div>
               </button>
             </div>
           ) : (
             <>
-              {renderResults()}
-              
               <div className="h-[600px] overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white">
                 {messages.map((message, index) => (
                   <div
                     key={index}
-                    className={`mb-4 animate-fadeIn ${
+                    className={`mb-6 animate-fadeIn ${
                       message.role === 'user' ? 'text-right' : 'text-left'
                     }`}
                   >
                     <div
-                      className={`inline-block max-w-3xl p-5 rounded-2xl ${
+                      className={`inline-block max-w-3xl p-6 rounded-2xl ${
                         message.role === 'user'
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                          : 'bg-white text-gray-800 shadow-lg border border-gray-100'
+                          ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-md'
+                          : 'bg-white text-gray-800 shadow-sm border border-gray-100'
                       }`}
                     >
-                      <div className={message.role === 'assistant' ? 'prose prose-sm max-w-none' : ''}>
+                      <div className={message.role === 'assistant' ? 'prose prose-sm max-w-none text-gray-700 leading-relaxed' : 'text-white leading-relaxed'}>
                         {formatMessageContent(message.content)}
                       </div>
                     </div>
                   </div>
                 ))}
                 {isLoading && (
-                  <div className="text-left mb-4 animate-fadeIn">
-                    <div className="inline-block bg-white p-5 rounded-2xl shadow-lg border border-gray-100">
+                  <div className="text-left mb-6 animate-fadeIn">
+                    <div className="inline-block bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                       <div className="flex items-center gap-3">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                          <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                        <div className="flex gap-1.5">
+                          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
                         </div>
-                        <span className="text-gray-600">Thinking...</span>
+                        <span className="text-gray-500 text-sm">Analyzing your response...</span>
                       </div>
                     </div>
                   </div>
                 )}
+                
+                {/* Show results inline at bottom of conversation */}
+                {assessmentState.currentPhase === 'complete' && assessmentState.scores.assessmentComplete && (
+                  <div className="mb-4 animate-fadeIn">
+                    {renderResults()}
+                  </div>
+                )}
+                
                 <div ref={messagesEndRef} />
               </div>
 
               {assessmentState.currentPhase !== 'complete' && (
-                <div className="p-6 bg-white border-t border-gray-200">
-                  <div className="flex gap-3 items-end">
+                <div className="p-6 bg-white border-t border-gray-100">
+                  <div className="flex gap-4 items-end">
                     <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Type your response... (Shift+Enter for new line, Enter to send)"
-                      className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none overflow-auto"
+                      className="flex-1 px-5 py-4 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none overflow-auto text-gray-900 placeholder-gray-400"
                       style={{
                         minHeight: '120px',
                         maxHeight: '300px',
@@ -601,7 +618,7 @@ Return ONLY valid JSON in this exact structure:
                     <button
                       onClick={sendMessage}
                       disabled={isLoading || !input.trim()}
-                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2 h-[60px]"
+                      className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl font-semibold hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2 h-[60px]"
                     >
                       <Send size={20} />
                       Send
@@ -610,16 +627,16 @@ Return ONLY valid JSON in this exact structure:
                 </div>
               )}
 
-              <div className="p-4 bg-gradient-to-r from-gray-50 to-blue-50 border-t border-gray-200 flex justify-between items-center">
+              <div className="p-5 bg-gradient-to-r from-gray-50 to-slate-50 border-t border-gray-100 flex justify-between items-center">
                 <button
                   onClick={resetAssessment}
-                  className="flex items-center gap-2 px-5 py-2 text-gray-700 hover:text-gray-900 hover:bg-white rounded-lg transition-all"
+                  className="flex items-center gap-2 px-5 py-2.5 text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-all border border-transparent hover:border-gray-200"
                 >
                   <RotateCcw size={18} />
-                  Start New Assessment
+                  <span className="font-medium">Start New Assessment</span>
                 </button>
                 {assessmentState.currentPhase === 'complete' && (
-                  <div className="flex items-center gap-2 text-green-600 font-semibold bg-green-50 px-4 py-2 rounded-lg">
+                  <div className="flex items-center gap-2 text-emerald-600 font-semibold bg-emerald-50 px-4 py-2.5 rounded-xl border border-emerald-200">
                     <CheckCircle size={20} />
                     Assessment Complete
                   </div>
