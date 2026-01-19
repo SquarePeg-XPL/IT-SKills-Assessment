@@ -241,28 +241,42 @@ Return ONLY valid JSON in this exact structure:
       const data = await response.json();
       let claudeResponse = data.content[0].text;
 
-      // Check if this is the final assessment JSON
-      if (claudeResponse.includes('"assessmentComplete": true')) {
+      // Check if this is the final assessment JSON - look for the JSON structure
+      if (claudeResponse.includes('"assessmentComplete": true') || claudeResponse.includes('assessmentComplete')) {
         try {
-          // Strip any markdown formatting
-          claudeResponse = claudeResponse.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-          const assessmentResults = JSON.parse(claudeResponse);
+          // Extract JSON from response (may be wrapped in markdown or have preamble text)
+          let jsonText = claudeResponse;
           
-          setAssessmentState(prev => ({
-            ...prev,
-            currentPhase: 'complete',
-            scores: assessmentResults
-          }));
+          // Remove markdown code blocks if present
+          jsonText = jsonText.replace(/```json\n?/g, "").replace(/```\n?/g, "");
           
-          // Don't add the JSON to messages - just show a completion message
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: "Thank you for completing the assessment! Your results are now ready above. You can review your scores, strengths, and personalized development recommendations."
-          }]);
+          // Try to extract just the JSON object if there's other text
+          const jsonMatch = jsonText.match(/\{[\s\S]*"assessmentComplete"[\s\S]*\}/);
+          if (jsonMatch) {
+            jsonText = jsonMatch[0];
+          }
           
-          return; // Exit early, don't add JSON to messages
+          const assessmentResults = JSON.parse(jsonText);
+          
+          // Only proceed if we successfully parsed and it has the complete flag
+          if (assessmentResults.assessmentComplete) {
+            setAssessmentState(prev => ({
+              ...prev,
+              currentPhase: 'complete',
+              scores: assessmentResults
+            }));
+            
+            // Don't add the JSON to messages - just show a completion message
+            setMessages(prev => [...prev, {
+              role: 'assistant',
+              content: "✓ Assessment complete! Your detailed results are displayed above with scores, strengths, and personalized development recommendations."
+            }]);
+            
+            return; // Exit early, don't add JSON to messages
+          }
         } catch (parseError) {
           console.error("Error parsing final results:", parseError);
+          // Fall through to add the message normally if parsing fails
         }
       }
 
@@ -577,9 +591,9 @@ Return ONLY valid JSON in this exact structure:
                       placeholder="Type your response... (Shift+Enter for new line, Enter to send)"
                       className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none overflow-auto"
                       style={{
-                        minHeight: '60px',
-                        maxHeight: '200px',
-                        height: input ? `${Math.min(200, Math.max(60, input.split('\n').length * 24 + 36))}px` : '60px'
+                        minHeight: '120px',
+                        maxHeight: '300px',
+                        height: input ? `${Math.min(300, Math.max(120, input.split('\n').length * 24 + 36))}px` : '120px'
                       }}
                       rows={1}
                       disabled={isLoading}
