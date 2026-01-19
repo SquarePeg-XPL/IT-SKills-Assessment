@@ -116,36 +116,193 @@ export default function AdminDashboard() {
     return roleSkills[roleId]?.some(s => s.id === skillId) || false;
   };
 
-  // Role Form Component
+  // Role Form Component with AI suggestions
   const RoleForm = ({ role, onSave, onCancel }) => {
     const [formData, setFormData] = useState(role || { name: '', description: '', department: '' });
+    const [suggestedSkills, setSuggestedSkills] = useState([]);
+    const [suggestedDescription, setSuggestedDescription] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+
+    const departments = [
+      'Sales',
+      'Marketing',
+      'Engineering',
+      'Product',
+      'Customer Success',
+      'Operations',
+      'Finance',
+      'Human Resources',
+      'Information Technology',
+      'Legal',
+      'Other'
+    ];
+
+    const generateSuggestions = async () => {
+      if (!formData.name.trim()) return;
+      
+      setIsGenerating(true);
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1500,
+            messages: [{
+              role: 'user',
+              content: `For the job role "${formData.name}", provide:
+1. A concise 1-2 sentence description of this role's core responsibilities
+2. 8-12 relevant skills (mix of technical and soft skills) that should be assessed for this role
+
+Respond ONLY in this JSON format:
+{
+  "description": "1-2 sentence description",
+  "skills": [
+    {"name": "Skill Name", "category": "technical", "description": "brief description"},
+    {"name": "Skill Name", "category": "soft", "description": "brief description"}
+  ]
+}`
+            }]
+          })
+        });
+
+        const data = await response.json();
+        const content = data.content[0].text;
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        
+        if (jsonMatch) {
+          const suggestions = JSON.parse(jsonMatch[0]);
+          setSuggestedDescription(suggestions.description);
+          setSuggestedSkills(suggestions.skills);
+        }
+      } catch (error) {
+        console.error('Error generating suggestions:', error);
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    const applyDescription = () => {
+      setFormData({ ...formData, description: suggestedDescription });
+    };
+
+    const createAndAssignSkill = async (skillData) => {
+      // Check if skill already exists
+      const existing = skills.find(s => 
+        s.name.toLowerCase() === skillData.name.toLowerCase()
+      );
+      
+      if (existing) {
+        // Skill exists, just mark it for assignment
+        return existing.id;
+      } else {
+        // Create new skill
+        const { data, error } = await supabase
+          .from('skills')
+          .insert([skillData])
+          .select()
+          .single();
+        
+        if (data) {
+          return data.id;
+        }
+      }
+      return null;
+    };
+
+    const saveWithSkills = async () => {
+      // First save the role
+      let savedRoleId = formData.id;
+      
+      if (formData.id) {
+        await supabase.from('roles').update(formData).eq('id', formData.id);
+      } else {
+        const { data } = await supabase.from('roles').insert([formData]).select().single();
+        savedRoleId = data?.id;
+      }
+
+      // Then assign selected skills
+      if (savedRoleId && suggestedSkills.length > 0) {
+        const selectedSkills = suggestedSkills.filter(s => s.selected);
+        
+        for (const skill of selectedSkills) {
+          const skillId = await createAndAssignSkill({
+            name: skill.name,
+            category: skill.category,
+            description: skill.description
+          });
+          
+          if (skillId) {
+            await supabase.from('role_skills').upsert([{
+              role_id: savedRoleId,
+              skill_id: skillId,
+              is_required: true
+            }], {
+              onConflict: 'role_id,skill_id',
+              ignoreDuplicates: true
+            });
+          }
+        }
+      }
+
+      onSave(formData);
+    };
+
+    const toggleSkillSelection = (index) => {
+      const updated = [...suggestedSkills];
+      updated[index] = { ...updated[index], selected: !updated[index].selected };
+      setSuggestedSkills(updated);
+    };
 
     return (
       <div className="p-6 bg-gray-50 border border-gray-200 rounded-xl mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Role Name*</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="e.g., Senior Product Manager"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="e.g., Senior Product Manager"
+              />
+              <button
+                onClick={generateSuggestions}
+                disabled={!formData.name.trim() || isGenerating}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
+              >
+                {isGenerating ? 'Generating...' : '✨ Suggest'}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-            <input
-              type="text"
+            <select
               value={formData.department}
               onChange={(e) => setFormData({ ...formData, department: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="e.g., Product, Engineering, Sales"
-            />
+            >
+              <option value="">Select department...</option>
+              {departments.map(dept => (
+                <option key={dept} value={dept}>{dept}</option>
+              ))}
+            </select>
           </div>
         </div>
+
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700">Description</label>
+            {suggestedDescription && (
+              <button
+                onClick={applyDescription}
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                Use suggested description
+              </button>
+            )}
+          </div>
           <textarea
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -153,15 +310,60 @@ export default function AdminDashboard() {
             rows="3"
             placeholder="Brief description of this role's responsibilities..."
           />
+          {suggestedDescription && !formData.description && (
+            <p className="mt-2 text-sm text-gray-600 italic bg-indigo-50 p-3 rounded-lg">
+              💡 Suggested: {suggestedDescription}
+            </p>
+          )}
         </div>
+
+        {/* Suggested Skills */}
+        {suggestedSkills.length > 0 && (
+          <div className="mb-4 p-4 bg-white rounded-lg border border-indigo-200">
+            <h4 className="text-sm font-semibold text-gray-900 mb-3">
+              Suggested Skills (select which to assign)
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {suggestedSkills.map((skill, idx) => (
+                <label
+                  key={idx}
+                  className="flex items-start gap-2 p-2 rounded hover:bg-gray-50 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={skill.selected || false}
+                    onChange={() => toggleSkillSelection(idx)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-900">{skill.name}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded ${
+                        skill.category === 'technical' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {skill.category}
+                      </span>
+                    </div>
+                    {skill.description && (
+                      <p className="text-xs text-gray-600 mt-0.5">{skill.description}</p>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <button
-            onClick={() => onSave(formData)}
+            onClick={saveWithSkills}
             disabled={!formData.name}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Save size={16} />
-            Save Role
+            Save Role {suggestedSkills.filter(s => s.selected).length > 0 && `& Assign ${suggestedSkills.filter(s => s.selected).length} Skills`}
           </button>
           <button
             onClick={onCancel}
