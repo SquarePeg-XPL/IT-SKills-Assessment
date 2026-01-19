@@ -45,9 +45,19 @@ export default function AdminDashboard() {
   // Role Management
   const saveRole = async (role) => {
     if (role.id) {
-      await supabase.from('roles').update(role).eq('id', role.id);
+      // Update existing role
+      await supabase.from('roles').update({
+        name: role.name,
+        description: role.description,
+        department: role.department
+      }).eq('id', role.id);
     } else {
-      await supabase.from('roles').insert([role]);
+      // Create new role
+      await supabase.from('roles').insert([{
+        name: role.name,
+        description: role.description,
+        department: role.department
+      }]);
     }
     setEditingRole(null);
     fetchData();
@@ -215,13 +225,23 @@ Respond ONLY in this JSON format:
       let savedRoleId = formData.id;
       
       if (formData.id) {
-        await supabase.from('roles').update(formData).eq('id', formData.id);
+        // Update existing role - only update the specific fields
+        await supabase.from('roles').update({
+          name: formData.name,
+          description: formData.description,
+          department: formData.department
+        }).eq('id', formData.id);
       } else {
-        const { data } = await supabase.from('roles').insert([formData]).select().single();
+        // Create new role
+        const { data } = await supabase.from('roles').insert([{
+          name: formData.name,
+          description: formData.description,
+          department: formData.department
+        }]).select().single();
         savedRoleId = data?.id;
       }
 
-      // Then assign selected skills
+      // Then assign selected skills (only for new roles or when skills were suggested)
       if (savedRoleId && suggestedSkills.length > 0) {
         const selectedSkills = suggestedSkills.filter(s => s.selected);
         
@@ -245,6 +265,7 @@ Respond ONLY in this JSON format:
         }
       }
 
+      fetchData();
       onSave(formData);
     };
 
