@@ -138,7 +138,7 @@ export default function AdminDashboard() {
     ];
 
     const generateSuggestions = async () => {
-      if (!formData.name.trim()) return;
+      if (!formData.name || !formData.name.trim()) return;
       
       setIsGenerating(true);
       try {
@@ -269,7 +269,7 @@ Respond ONLY in this JSON format:
               />
               <button
                 onClick={generateSuggestions}
-                disabled={!formData.name.trim() || isGenerating}
+                disabled={!formData.name || !formData.name.trim() || isGenerating}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
               >
                 {isGenerating ? 'Generating...' : '✨ Suggest'}
