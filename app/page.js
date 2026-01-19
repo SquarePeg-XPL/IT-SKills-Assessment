@@ -525,11 +525,11 @@ Return ONLY valid JSON in this exact structure:
                   </div>
                 </div>
                 <div className="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-lg mb-8 max-w-2xl mx-auto">
-                  <p className="text-gray-700">
-                    <span className="font-semibold">Duration:</span> 15-20 minutes • 
-                    <span className="font-semibold ml-2">Format:</span> Conversational assessment • 
-                    <span className="font-semibold ml-2">Result:</span> Detailed skills report
-                  </p>
+                  <div className="text-gray-700 space-y-1">
+                    <p><span className="font-semibold">Duration:</span> 15-20 minutes</p>
+                    <p><span className="font-semibold">Format:</span> Conversational assessment</p>
+                    <p><span className="font-semibold">Result:</span> Detailed skills report</p>
+                  </div>
                 </div>
               </div>
               <button
