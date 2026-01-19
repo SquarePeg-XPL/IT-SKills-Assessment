@@ -570,24 +570,14 @@ Return ONLY valid JSON in this exact structure:
         <div className="bg-white rounded-3xl border border-gray-200/80 shadow-sm overflow-hidden">
           {/* Header */}
           <div className="relative px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-white via-gray-50/50 to-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                  <Award size={20} className="text-white" strokeWidth={2.5} />
-                </div>
-                <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Skills Assessment</h1>
-                  <p className="text-sm text-gray-500">Comprehensive role-based evaluation</p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <Award size={20} className="text-white" strokeWidth={2.5} />
               </div>
-              {assessmentState.currentPhase === 'roleSelection' && (
-                <a
-                  href="/admin"
-                  className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-300 rounded-lg transition-all"
-                >
-                  Admin →
-                </a>
-              )}
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">Skills Assessment</h1>
+                <p className="text-sm text-gray-500">Comprehensive role-based evaluation</p>
+              </div>
             </div>
           </div>
 
